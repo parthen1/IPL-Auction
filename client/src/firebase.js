@@ -7,7 +7,7 @@ const clean = (val, fallback) => {
 };
 
 const firebaseConfig = {
-    apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY, "AIzaSyDwxSTNXU8tGWcWhBW8FcJHu_7Hkh8or08"),
+    apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY, "AIzaSyC5NtVq5Le_0zBqFtl7zKPwFfzWn6ysuik"),
     authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, "ipl-auction-36b5d.firebaseapp.com"),
     projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID, "ipl-auction-36b5d"),
     storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, "ipl-auction-36b5d.firebasestorage.app"),
