@@ -39,14 +39,14 @@ const adminOnly = (req, res, next) => {
 // Client sends Firebase Token in Header via middleware
 // Returns Mongo User details
 router.post('/login', firebaseAuth, (req, res) => {
-    // Generate token equivalent to /login-local so frontend has a unified token schema
+    const secret = process.env.JWT_SECRET || 'super_secret_auction_jwt_token_key_2026';
     const token = jwt.sign({
         userId: req.user._id,
         role: req.user.role,
         teamCode: req.user.teamCode || null,
         tournamentId: null,
         sessionId: null
-    }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    }, secret, { expiresIn: '24h' });
 
     res.json({
         success: true,

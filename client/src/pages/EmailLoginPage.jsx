@@ -13,8 +13,9 @@ const EmailLoginPage = () => {
 
     // Called after a successful Firebase Google popup
     const handleGoogleSuccess = async (user) => {
-        const firebaseToken = await user.getIdToken(true); // force refresh to guarantee fresh Firebase ID token
         try {
+            const firebaseToken = await user.getIdToken(true); // force refresh to guarantee fresh Firebase ID token
+            console.log('[Auth] Google Popup success, exchanging token with backend...');
             const response = await api.post('/api/v2/auth/login', { firebaseToken }, {
                 headers: { 'Authorization': `Bearer ${firebaseToken}` }
             });
@@ -31,7 +32,9 @@ const EmailLoginPage = () => {
                 setError(data.message || 'Google Authentication failed on server.');
             }
         } catch (err) {
-            setError('Network error verifying Google login.');
+            console.error('[Auth] Google Auth Server Error:', err);
+            const serverMsg = err.response?.data?.errorDetails || err.response?.data?.message || err.message;
+            setError(serverMsg || 'Network error verifying Google login.');
         }
     };
 
