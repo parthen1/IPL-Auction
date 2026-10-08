@@ -5,11 +5,11 @@
 const getApiUrl = () => {
     // 1. Check if explicitly defined in Environment Variables (e.g. .env)
     if (import.meta.env.VITE_API_BASE_URL) {
-        return import.meta.env.VITE_API_BASE_URL;
+        return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
     }
 
-    // 2. Fallback to Production (Default behavior for users)
-    return 'https://a-bhavy-bot-bbheroku-5f1b58e25c41.herokuapp.com';
+    // 2. Fallback to Active Render Backend
+    return 'https://ipl-auction-backend-jj78.onrender.com';
 };
 
 export const API_BASE_URL = getApiUrl();

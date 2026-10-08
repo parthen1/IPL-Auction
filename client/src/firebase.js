@@ -1,15 +1,18 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-const clean = (val) => (val ? String(val).trim().replace(/^["']|["']$/g, '') : undefined);
+const clean = (val, fallback) => {
+    const v = val || fallback;
+    return v ? String(v).trim().replace(/^["']|["']$/g, '') : undefined;
+};
 
 const firebaseConfig = {
-    apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY),
-    authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-    projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID),
-    storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-    messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
-    appId: clean(import.meta.env.VITE_FIREBASE_APP_ID)
+    apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY, "AIzaSyDwxSTNXU8tGWcWhBW8FcJHu_7Hkh8or08"),
+    authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, "ipl-auction-36b5d.firebaseapp.com"),
+    projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID, "ipl-auction-36b5d"),
+    storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, "ipl-auction-36b5d.firebasestorage.app"),
+    messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID, "376372755354"),
+    appId: clean(import.meta.env.VITE_FIREBASE_APP_ID, "1:376372755354:web:551174512dc721dd59d823")
 };
 
 // Only initialise Firebase when all required keys are present.
