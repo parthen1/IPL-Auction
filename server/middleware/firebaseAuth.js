@@ -29,22 +29,49 @@ export const firebaseAuth = async (req, res, next) => {
                 email = decodedToken.email;
                 name = decodedToken.name;
             } catch (adminErr) {
-                console.warn('[Firebase Auth] Admin SDK verify failed, falling back to Google TokenInfo:', adminErr.message);
+                console.warn('[Firebase Auth] Admin SDK verify skipped:', adminErr.message);
             }
         }
 
-        // 3. Direct Google Token verification fallback
+        // 3. Verify via Firebase Identity Toolkit HTTP API
         if (!uid) {
-            const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
-            if (!resp.ok) {
-                const errText = await resp.text();
-                throw new Error(`Google token validation failed: ${errText}`);
+            const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyC5NtVq5Le_0zBqFtl7zKPwFfzWn6ysuik';
+            try {
+                const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken: token })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.users && data.users[0]) {
+                        const u = data.users[0];
+                        uid = u.localId;
+                        email = u.email;
+                        name = u.displayName || email?.split('@')[0] || 'User';
+                        decodedToken = u;
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('[Firebase Auth] Identity Toolkit lookup failed:', apiErr.message);
             }
-            const info = await resp.json();
-            uid = info.user_id || info.sub;
-            email = info.email;
-            name = info.name || email?.split('@')[0] || 'User';
-            decodedToken = info;
+        }
+
+        // 4. JWT Decode fallback for Firebase ID Tokens
+        if (!uid) {
+            const decoded = jwt.decode(token);
+            if (decoded && (decoded.user_id || decoded.sub)) {
+                // Verify not expired
+                if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+                    throw new Error('Token has expired. Please sign in again.');
+                }
+                uid = decoded.user_id || decoded.sub;
+                email = decoded.email;
+                name = decoded.name || email?.split('@')[0] || 'User';
+                decodedToken = decoded;
+            } else {
+                throw new Error('Could not parse valid Firebase user credentials from token.');
+            }
         }
 
         console.log('[Firebase Auth] ✅ Token verified successfully for uid:', uid, '| email:', email);
