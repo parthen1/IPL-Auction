@@ -15,26 +15,65 @@ export const firebaseAuth = async (req, res, next) => {
         return res.status(401).json({ message: 'No token provided' });
     }
 
-    console.log('[Firebase Auth] Incoming token (first 40 chars):', token.substring(0, 40) + '...');
-
     try {
-        // 2. Verify with Firebase
-        const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
-        const { uid, email, name, picture } = decodedToken;
+        let decodedToken = null;
+        let uid = null;
+        let email = null;
+        let name = null;
+
+        // 2. Try Firebase Admin first if initialized
+        if (firebaseAdmin.apps && firebaseAdmin.apps.length > 0) {
+            try {
+                decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+                uid = decodedToken.uid;
+                email = decodedToken.email;
+                name = decodedToken.name;
+            } catch (adminErr) {
+                console.warn('[Firebase Auth] Admin SDK verify failed, falling back to Google TokenInfo:', adminErr.message);
+            }
+        }
+
+        // 3. Direct Google Token verification fallback
+        if (!uid) {
+            const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+            if (!resp.ok) {
+                const errText = await resp.text();
+                throw new Error(`Google token validation failed: ${errText}`);
+            }
+            const info = await resp.json();
+            uid = info.user_id || info.sub;
+            email = info.email;
+            name = info.name || email?.split('@')[0] || 'User';
+            decodedToken = info;
+        }
+
         console.log('[Firebase Auth] ✅ Token verified successfully for uid:', uid, '| email:', email);
 
-        // 3. Find or Create User in Mongo
-        let user = await User.findOne({ firebaseUid: uid });
+        const adminEmails = [
+            'parthendesai04@gmail.com',
+            'dhruvpatel3768@gmail.com',
+            (process.env.ADMIN_EMAIL || '').toLowerCase()
+        ].filter(Boolean);
+
+        const isUserAdmin = email && adminEmails.includes(email.toLowerCase());
+
+        // 4. Find or Create User in Mongo
+        let user = await User.findOne({ $or: [{ firebaseUid: uid }, { email: email }] });
 
         if (!user) {
             user = await User.create({
                 firebaseUid: uid,
                 email: email,
                 name: name || 'User',
-                role: email === 'dhruvpatel3768@gmail.com' ? 'admin' : 'user'
+                role: isUserAdmin ? 'admin' : 'user'
             });
-        } else if (email === 'dhruvpatel3768@gmail.com' && user.role !== 'admin') {
-            user.role = 'admin';
+        } else {
+            if (!user.firebaseUid) {
+                user.firebaseUid = uid;
+            }
+            if (isUserAdmin && user.role !== 'admin') {
+                user.role = 'admin';
+            }
             await user.save();
         }
 
@@ -44,15 +83,13 @@ export const firebaseAuth = async (req, res, next) => {
         next();
     } catch (error) {
         console.error('[Firebase Auth] ❌ Firebase verify error detailed:', {
-            errorCode: error.code,
             errorMessage: error.message,
             stack: error.stack,
             tokenPreview: token.substring(0, 40) + '...'
         });
         return res.status(401).json({
             message: 'Invalid Firebase token',
-            errorDetails: error.message,
-            errorCode: error.code || 'unknown'
+            errorDetails: error.message
         });
     }
 };
