@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Sparkles, LogOut, ArrowRight, ShieldCheck, UserCircle } from 'lucide-react';
+import { Trophy, Sparkles, LogOut, ArrowRight, ShieldCheck, UserCircle, Shield } from 'lucide-react';
 import { API_BASE_URL as API_URL } from '../config';
 
 const MainMenuPage = () => {
@@ -106,7 +106,7 @@ const MainMenuPage = () => {
                 {/* Header Sequence */}
                 <div className="text-center mb-12">
                     <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
-                        <ShieldCheck size={14} className="text-emerald-500" /> Securely Authenticated
+                        <ShieldCheck size={14} className="text-emerald-500" /> {user?.role === 'admin' ? 'Administrator Authenticated' : 'Securely Authenticated'}
                     </p>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Select Game Mode</h1>
                     <p className="mt-4 text-gray-500 font-medium text-lg">
@@ -115,22 +115,48 @@ const MainMenuPage = () => {
                 </div>
 
                 {/* Game Modes */}
-                <div className="grid grid-cols-1 max-w-md mx-auto gap-6 md:gap-8">
+                <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'md:grid-cols-2 max-w-3xl' : 'max-w-md'} mx-auto gap-6 md:gap-8`}>
                     
+                    {/* Admin Panel Card */}
+                    {user?.role === 'admin' && (
+                        <article 
+                            onClick={() => navigate('/admin')} 
+                            className="group relative cursor-pointer overflow-hidden rounded-[36px] bg-white border border-red-200 shadow-xl hover:shadow-2xl hover:border-red-400 hover:-translate-y-1 transition-all duration-300"
+                        >
+                            <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-red-600 to-amber-500" />
+                            <div className="p-8 md:p-10 flex flex-col justify-between h-full">
+                                <div>
+                                    <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-red-600 group-hover:text-white transition-all duration-300">
+                                        <Shield size={32} />
+                                    </div>
+                                    <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Admin Portal</h2>
+                                    <p className="text-gray-500 font-medium leading-relaxed mb-8">
+                                        Full management control: control auction rounds, manage players, toggle trade windows, manage squad points, and sync live stats.
+                                    </p>
+                                </div>
+                                <div className="flex items-center text-red-600 font-black text-sm uppercase tracking-wide gap-2 group-hover:gap-3 transition-all">
+                                    Open Admin Console <ArrowRight size={18} />
+                                </div>
+                            </div>
+                        </article>
+                    )}
+
                     {/* Auction Box */}
                     <article 
                         onClick={() => navigate('/tournaments')} 
                         className="group relative cursor-pointer overflow-hidden rounded-[36px] bg-white border border-gray-200 shadow-xl hover:shadow-2xl hover:border-blue-400 hover:-translate-y-1 transition-all duration-300"
                     >
                         <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-blue-600 to-indigo-500" />
-                        <div className="p-8 md:p-10">
-                            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                                <Trophy size={32} />
+                        <div className="p-8 md:p-10 flex flex-col justify-between h-full">
+                            <div>
+                                <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                                    <Trophy size={32} />
+                                </div>
+                                <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Auction Arena</h2>
+                                <p className="text-gray-500 font-medium leading-relaxed mb-8">
+                                    Enter the auction room. Select a tournament, join your team, and battle against other franchises in real-time bidding wars.
+                                </p>
                             </div>
-                            <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Auction Arena</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed mb-8">
-                                Enter the auction room. Select a tournament, join your team, and battle against other franchises in real-time bidding wars.
-                            </p>
                             <div className="flex items-center text-blue-600 font-black text-sm uppercase tracking-wide gap-2 group-hover:gap-3 transition-all">
                                 Enter Auction <ArrowRight size={18} />
                             </div>

@@ -63,8 +63,9 @@ const EmailLoginPage = () => {
                 setError(data.message || 'Invalid username or password.');
             }
         } catch (err) {
-            setError('Network error. Please try again.');
-            console.error(err);
+            console.error('[Auth] Local Login Error:', err);
+            const serverMsg = err.response?.data?.message || err.response?.data?.errorDetails;
+            setError(serverMsg || 'Network error. Please ensure the backend server is running and try again.');
         } finally {
             setLoading(false);
         }

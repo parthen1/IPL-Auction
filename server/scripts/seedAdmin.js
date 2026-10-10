@@ -25,20 +25,25 @@ async function seed() {
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
 
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
     // Check if admin already exists
     const existing = await User.findOne({ username: 'admin' });
     if (existing) {
-        console.log('[SKIP] Admin user already exists');
-        console.log('  username:', existing.username);
-        console.log('  role:', existing.role);
+        existing.password = hashedPassword;
+        existing.role = 'admin';
+        await existing.save();
+        console.log('[OK] Admin user updated');
+        console.log('  username: admin');
+        console.log('  password:', adminPassword);
+        console.log('  role: admin');
         await mongoose.disconnect();
         process.exit(0);
     }
-
-    const hashedPassword = await bcrypt.hash('admin123', 10);
     
     await User.create({
-        email: 'admin@auctionarena.local',
+        email: process.env.ADMIN_EMAIL || 'admin@auctionarena.local',
         firebaseUid: 'local-admin-uid-' + Date.now(),
         name: 'Admin',
         username: 'admin',
@@ -48,9 +53,9 @@ async function seed() {
 
     console.log('[OK] Admin user created');
     console.log('  username: admin');
-    console.log('  password: admin123');
+    console.log('  password:', adminPassword);
     console.log('  role: admin');
-    console.log('\nYou can now log in at http://localhost:5174/email-login');
+    console.log('\nYou can now log in at /email-login');
     
     await mongoose.disconnect();
     process.exit(0);
